@@ -1,1 +1,1 @@
-# Repository for analysis of live-chats with Julia
+Repository for analysis of live-chats with Julia
