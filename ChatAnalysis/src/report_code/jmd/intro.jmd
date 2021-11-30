@@ -1,0 +1,65 @@
+---
+title: Análisis de chats - I
+weave_options:
+  fig_height: 5
+  fig_width: 6
+  line_width: 70
+  wrap: true
+  echo: false
+  error: false
+---
+
+## 1.  Unidades analíticas  
+
+## 
+
+Rhy ofrece una plataforma de live-chats con agentes comerciales, que dan soporte a compradores en puntos de venta virtuales.
+Los chats generan ficheros de tiques o eventos entre un agente y un cliente (comprador). 
+
+Nuestro método de análisis está basado en la extracción de las conversaciones agente-cliente contenidas en los ficheros y su posterior descomposición en 
+turnos, palabras (*tokens*) y enlaces.
+
+#### 1.1. Tique
+
+#### 
+
+Para caracterizar un tique o evento utilizaré los siguientes cuatro campos del fichero:
+
+  - *id*: identificador único de una secuencia de eventos entre un agente y un cliente. Este 'id' lo utilizaré para asociar una secuencia de tiques con una conversación.
+  - *action*: tipo de evento.
+  - *data*: descripción del evento.
+  - *trigger*: instancia generadora del evento. En los eventos de una conversación, las instancias generadoras serán siempre cuentas de correo electrónico asociadas a un 'agente' o a un 'cliente'.
+
+  El primer paso de mi análisis será extraer los tiques relevantes que componen una conversación agente-cliente.
+
+#### 1.2  Conversación
+
+#### 
+
+Una  conversación  es  una secuencia  de tiques  con un mismo *id*  y con el valor `reply.text.create` en el campo *action*.
+
+Estas son las asunciones que haré para extraer conversaciones a partir de los tiques en el fichero: 
+
+  1. Los  interlocutores  de  una  conversación  pueden  identificarse  por  el  valor  del  campo *trigger*. Un cliente tendrá el valor `unknown@chat.inbenta.com`; un agente, cualquier otro valor que represente una cuenta de correo electrónico. 
+  3. Los tiques tienen siempre  el valor `Spanish` en el campo *data* cuando el valor de *action* sea `ticket.create.language`. Asumiré, además que el valor es correcto y no es necesario, pues, un análisis multi-idioma.
+
+#### 1.3  Turno
+
+#### 
+
+Un turno es una sucesión de tiques, en el interior de una conversación, que mantiene un mismo valor en el campo *trigger*. Una conversación se estructura, a su vez, en una sucesión de turnos de agente y cliente.
+
+#### 1.4  Enlace
+
+#### 
+
+Un enlace es una dirección de una página *web* que un cliente o un agente mencionan en el *chat*.
+
+#### 1.5  Esquema de las unidades de análisis
+
+#### 
+
+La siguiente imagen ilustra los conceptos que hemos definido más arriba.
+
+![](img/ticket_general.png)
+

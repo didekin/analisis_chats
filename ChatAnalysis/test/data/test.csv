@@ -1,0 +1,58 @@
+id,action,data,trigger,"action date"
+7715,reply.text.create,", ",geraldineivg@gmail.com,1612171569
+7715,reply.text.create,"En que le puedo ayudar?",geraldineivg@gmail.com,1612171576
+7715,reply.text.create,"estoy buscando un raton gaming inalambrico",unknown@chat.inbenta.com,1612171599
+7715,reply.text.create,"",geraldineivg@gmail.com,1612171612
+7715,reply.text.create,https://www.pccomponentes.com/buscar/?query=raton-gaming-inalambrico,geraldineivg@gmail.com,1612171635
+7715,reply.text.create,"Le dejo el enlace con los modelos de raton gaming inalambrico.",geraldineivg@gmail.com,1612171655
+7715,reply.text.create,"Tiene otra consulta?",geraldineivg@gmail.com,1612171667
+7715,reply.text.create,,unknown@chat.inbenta.com,1612171669
+7715,reply.text.create,"i un teclado",unknown@chat.inbenta.com,1612171679
+7715,reply.text.create,https://www.pccomponentes.com/buscar/?query=teclado-gaming-inalambrico,geraldineivg@gmail.com,1612171705
+7715,solver.change,geraldineivg@gmail.com,geraldineivg@gmail.com,1614958079
+7715,status.change,Open,geraldineivg@gmail.com,1614958079
+7715,status.change,Close,geraldineivg@gmail.com,1612171719
+7716,ticket.create.title,"Chat from Unknown",unknown@chat.inbenta.com,1612172108
+7716,ticket.create.description,,unknown@chat.inbenta.com,1612172108
+7716,ticket.create.source,Chat,system,1612172108
+7716,ticket.create.language,Spanish,system,1612172108
+7716,ticket.create.status,New,system,1612172108
+7716,ticket.create.priority,Medium,system,1612172108
+7716,ticket.create.queue,1,system,1612172108
+7716,ticket.create.solver,geraldineivg@gmail.com,system,1612172108
+7716,chat.close,userClosedWhileChatting,,1612172124
+7716,reply.text.create,", ",geraldineivg@gmail.com,1612172114
+7716,solver.change,geraldineivg@gmail.com,geraldineivg@gmail.com,1614958079
+7716,status.change,Open,geraldineivg@gmail.com,1614958079
+7716,status.change,Close,geraldineivg@gmail.com,1612172124
+7717,ticket.create.title,"Chat from Unknown",unknown@chat.inbenta.com,1612172327
+7717,ticket.create.description,,unknown@chat.inbenta.com,1612172327
+7717,ticket.create.source,Chat,system,1612172327
+7717,ticket.create.language,Spanish,system,1612172327
+7717,ticket.create.status,New,system,1612172327
+7717,ticket.create.priority,Medium,system,1612172327
+7717,ticket.create.queue,1,system,1612172327
+7717,chat.close,userLeftQueue,,1612172346
+7718,ticket.create.title,"Chat from Unknown",unknown@chat.inbenta.com,1612172164
+7718,ticket.create.description,,unknown@chat.inbenta.com,1612172164
+7718,ticket.create.source,Chat,system,1612172164
+7718,ticket.create.language,Spanish,system,1612172164
+7718,ticket.create.status,New,system,1612172164
+7718,ticket.create.priority,Medium,system,1612172164
+7718,ticket.create.queue,1,system,1612172164
+7718,ticket.create.solver,geraldineivg@gmail.com,system,1612172164
+7718,chat.close,inactivity,system,1612172765
+7718,reply.survey.create,73e074bece32871377568a421a5b080cd62630b835ae0b842bfafcd7929bd644,unknown@chat.inbenta.com,1612172787
+7718,reply.text.create,", ",geraldineivg@gmail.com,1612172172
+7718,reply.text.create," que tarjeta grafica tiene este ordenador",unknown@chat.inbenta.com,1612172178
+7718,reply.text.create,"MSI Modern 15 A10M-486XES Intel Core I7-10510U/16GB/512GB SSD/15.6-pulgadas",unknown@chat.inbenta.com,1612172183
+7718,reply.text.create,", .",geraldineivg@gmail.com,1612172190
+7718,reply.text.create,"y cuantos GPU",unknown@chat.inbenta.com,1612172201
+7718,reply.text.create,"Controlador gráfico UMA",geraldineivg@gmail.com,1612172253
+7718,reply.text.create,"No es NVIDIA?",unknown@chat.inbenta.com,1612172289
+7718,reply.text.create,https://www.aboutespanol.com/que-es-una-tarjeta-grafica-uma-841118,geraldineivg@gmail.com,1612172447
+7718,reply.text.create,"Aquí le dejo un poco de información sobre esa gráfica.",geraldineivg@gmail.com,1612172463
+7718,solver.change,geraldineivg@gmail.com,geraldineivg@gmail.com,1614958079
+7718,status.change,Open,geraldineivg@gmail.com,1614958079
+7718,status.change,Close,geraldineivg@gmail.com,1612172765
+

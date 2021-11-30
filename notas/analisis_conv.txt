@@ -1,0 +1,43 @@
+--  Se puede utilizar AWS para interrogar los turnos de los agentes.
+--  Podemos buscar similitud con turnos nivel -1, -2, hasta -3 en las preguntas que generan una determinada respuesta.
+--  Tabla de productos sugeridos y texto de turnos de cliente de niveles -1, -2.
+
+--  Dos productos sugeridos son asimilables cuando aparecen como respuesta a preguntas similares.
+--  Reducir las conversaciones a sustantivos, (verbos), adjetivos y números, por un lado, y todo lo demás, en otro caso. 
+
+DOCS
+====
+
+--  In a term-document matrix, each row represents a word in the vocabulary and each column represents a document from some collection of documents.
+
+DESARROLLO
+==========
+
+--  Para investigar los términos asociados a los productos de las recomendaciones:
+    --  Habría que partir de algún tipo de tabla que relacione recomendación-turno. Ojo: puede haber más de una misma recomendación por turno: recom-turno-orden dentro turno.
+    --  Selecciono los turnos previos a la recomendación y defino con ellos un único documento. ¿Cómo identificarlo? Puedo añadir como primer token un id de recomendación.
+    --  Construyo la matriz de términos por documento-recomendación.
+    --  Las filas de la matriz representan los contadores de los términos que aparecen en los documentos de cada turnos-recomendación.
+    --  En un turno agente puede haber varias recomendaciones. Puede ocurrir que algunas recomendaciones ocurran 'siempre' juntas en los mismos turnos.
+        No es ningún problema: tendrían una correlación perfecta las filas de términos asociados a ellas. 
+
+--  tf-idf
+    --  tf: número de veces que aparece un vocablo en un turno. Verificar que Julia añade +1 y toma log10.
+    --  idf: número de turnos en total / número de turnos en que aparece un vocablo. Verificar que Julia toma log10.
+    --  ¿Hacemos los cálculos por separado para turnos de cliente? 
+
+--  Word2Vec
+    --  tamaño de la ventana de datos entre 1-10 en cada lado del target word; entre 2-20 en total.
+    --  Con recomendaciones, la utilidad de esta técnica sería descubrir cestas de venta cruzada de productos, construyendo n-grams de términos-nombres de productos:
+        todos los componentes de un n-gram serían nombres de productos en enlace. Más complicado para clientes, porque es difícil que nombren más de un producto.
+
+--  En todos los estudios, pueden compararse dos versiones consecutivas en el tiempo, para ver las variaciones.
+
+--  Distributional semantics: the contexts form the distributional properties of a word and they link it to words which can appear in similar constructions.
+    The question of why all these words tend to appear in the same contexts is left unanswered.
+
+--  Idea para evitar sparse matrices: 
+    In practice, both f and θ may be implemented as a dictionary rather than vectors, so that it is not necessary to explicitly identify j.
+    In such an implementation, the tuple (whale, FICTION) acts as a key in both dictionaries; the values in f are feature counts, and the values in θ are weights.
+    This representation is advantageous because it avoids storing and iterating over the many 
+    features whose counts are zero. 
