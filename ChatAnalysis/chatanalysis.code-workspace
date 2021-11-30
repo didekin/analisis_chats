@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../../../git_projects/some_docs/julia_language"
+		},
+		{
+			"path": "../../../../git_projects/some_docs/git"
 		}
 	],
 	"settings": {}
