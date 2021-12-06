@@ -12,6 +12,7 @@ CREATE TABLE enlace (
     rol ENUM('ag', 'cl') NOT NULL DEFAULT 'ag',
     turno_rol SMALLINT UNSIGNED NOT NULL,
     link VARCHAR(300),
+    hash_link VARCHAR(100) NOT NULL,
     PRIMARY KEY (id)
   );
 

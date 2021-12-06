@@ -1,0 +1,78 @@
+---
+title: Análisis de chats - V
+weave_options:
+  fig_height: 5
+  fig_width: 6
+  line_width: 70
+  wrap: true
+  echo: false
+  error: false
+---
+
+## 5.  Análisis semántico: enlaces a producto
+
+Para cuantificar una conversación en un vector, he seguido un método distinto en las convesaciones con enlaces a producto al seguido en los dos apartados anteriores.
+Mi objetivo, en este caso, no es tanto buscar la similitud léxica entre conversaciones, como descubrir en qué contextos agente-cliente surgen ciertos enlaces. Esos contextos
+podríamos formalizarlos posteriormente como argumentarios.
+
+Algoritmos como **word2vec** o **glove** (*global vectors for word representation*) parten de la misma intuición: dos palabras tienen un significado similar si se utilizan repetidamente 
+en el mismo contexto, entendiendo por similar no necesariamente una relación de pura sinonimia. En mi análisis, dos enlaces que aparecen repetidamente en contextos similares pueden hacer 
+referencia a productos intercambiables, desde el punto de vista de las prestaciones técnicas o del precio. Cuando el enlace lo sugiere el cliente, es su noción de intercambiabilidad 
+la que interviene. Cuando lo sugiere el agente, la intercambiabilidad está definida en el argumentario explícito o implícito que subyace al chatbot.
+
+Lo ideal hubiera sido hacer un análisis separado para los enlaces sugeridos por cada uno de los dos roles e identificar los respectivos contextos en que ubican los productos, y analizar
+las discrepancias entre ellos. Como muestra el gráfico siguiente, con los datos actuales, las repeticiones de enlaces entre conversaciones son muy pocas y, por consiguiente, la repetición de contextos,  
+también.
+
+![](img/plot_link_all_freq.png)
+
+
+He optado, pues, por hacer un análisis de todos los enlaces en conjunto para contar con más repeticiones. El método ha sido el siguiente:
+
+  1. Extraigo todos los turnos de conversaciones con enlaces a producto, de agente o de cliente.
+  2. Con los turnos compongo un único documento.
+  3. Para aplicar word2vec, defino los dos siguientes hiperparámetros: 10, como el número de términos que componen el contexto de una palabra (5 a la izquierda, 5 a la derecha), y 100 como el número de elementos que componen cada vector que representará una palabra.
+  4. Aplico el algoritmo word2vec al texto con todas las conversaciones y cuantifico todas las palabras en vectores de cien componentes.
+  5. Únicamente con los vectores obtenidos correspondientes a enlaces, aplico el algoritmo *K-means* para obtener cuatro grupos de enlaces.
+  6. Selecciono, en cada grupo, los ocho enlaces más cercanos al centro del grupo: aquellos que mejor lo representan.
+
+Las tablas siguientes muestran los enlaces obtenidos como resultado del proceso.
+
+#### 5.1 Distribución de los enlaces por grupos.
+
+```julia, results = "hidden"
+   include("../jl/links.jl")
+   using PrettyTables
+```
+
+```julia
+   pretty_table(links_by_grupo, names(links_by_grupo))
+```
+
+#### 5.1 Enlaces en grupo 1.
+
+```julia, line_width = 130
+   df1 = DataFrame(enlaces=greatest_bycosine(1,clusLk,centersLk,8))
+   pretty_table(df1, names(df1);  alignment=:l)
+```
+
+#### 5.2 Enlaces en grupo 2.
+
+```julia, line_width = 130
+   df2 = DataFrame(enlaces=greatest_bycosine(2,clusLk,centersLk,8))
+   pretty_table(df2, names(df2);  alignment=:l)
+```
+
+#### 5.3 Enlaces en grupo 3.
+
+```julia, line_width = 130
+   df3 = DataFrame(enlaces=greatest_bycosine(3,clusLk,centersLk,8))
+   pretty_table(df3, names(df3);  alignment=:l)
+```
+
+#### 5.4 Enlaces en grupo 4.
+
+```julia, line_width = 130
+   df4 = DataFrame(enlaces=greatest_bycosine(4,clusLk,centersLk,8))
+   pretty_table(df4, names(df4);  alignment=:l)
+```

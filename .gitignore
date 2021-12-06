@@ -23,11 +23,15 @@ docs/site/
 # environment.
 /**/Manifest.toml
 
+# DB credentials
+/**/.env
+/**/.envtest
+
 # Mac files
 .DS_Store
 
 # VSCode files
-/**/workspace.code-workspace
+analisis_chats.code-workspace
 .project
 .settings
 
