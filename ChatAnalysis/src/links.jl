@@ -1,46 +1,94 @@
-function convsDf(sqlQuery::String, conn::MySQL.Connection)::DataFrame
-    # posArray = ["ADJ", "ADP", "ADV", "NOUN", "PROPN", "SYM", "VERB", "X"]
-    queryDbtoDf(sqlQuery, conn)
-    # |>
-    #     df -> groupby(df, :id_conv) |>
-    #         df1 -> combine(df1, :tokens_links => (t -> join(t, ' ')) => :tokens_links)
+function checkPrice(text::String)
+    replace(text, r"((?:\d{1,3})?\.?(?:\d+))\s*(euros)" => s"\1-\2")
 end
 
-# Extract word2vec embeddings for links.
-function getEmbeddingsLinks(linksQuery::String, embeddingsFile::String, conn::MySQL.Connection)::DataFrame
-    linksDf = sort!(queryDbtoDf(linksQuery, conn), :link) 
-    @show size(linksDf, 1)
+function checkHashLink(hashText::String)
+    occursin(r"^(?:lkHs_)\d+$", hashText)
+end
+
+function checkFinalLinks(link::String)
+    replace(link, r"modelo[s]?|enlace[s]?|link[s]?" => s"")
+end
+
+function convsDf(credentials::Dict{String,String}, udpModel::RObject; sqlQuery::String = all_turno_tokenslinks)::DataFrame
+    posArray = ["ADJ", "ADP", "ADV", "NOUN", "NUM", "PROPN", "SYM", "VERB", "X"]
+    conn = mysqlConn(credentials)
+    dfOut = sqlDbToDf(sqlQuery, conn) |>
+            dfIn -> select!(
+                            dfIn,
+                            Not(:tokens_links),
+                            :tokens_links => ByRow(tk -> udpTokens(tk, posArray, udpModel)) => :tokensArr
+                    ) |>
+                    dfIn -> select!(dfIn, Not(:tokensArr), :tokensArr => ByRow(arr -> checkPrice(join(arr, ' '))) => :tokens_links) |>
+                            dfIn -> filter!(row -> length(row.tokens_links) > 0, dfIn)
+    cleanConn(conn)
+    dfOut
+end
+
+# Extract word2vec embeddings for links. Returns a data frame where each row is a link: :word (name) + :x1...:x100 for the embeddings.
+function embeddingsForLinks(embeddingsFile::String)::DataFrame
     embeddings = wordvectors(embeddingsFile)
-    embeddingsDf = hcat(DataFrame(word = embeddings.vocab), DataFrame(collect(embeddings.vectors'), :auto)) 
-    @show size(embeddingsDf, 1)
-    sort!(embeddingsDf, :word)
-    sort!(innerjoin(linksDf, embeddingsDf, on = :link => :word), :link)
-    return linksDf
+    hcat(DataFrame(word = embeddings.vocab), DataFrame(collect(embeddings.vectors'), :auto)) |>
+    dfIn -> filter(:word => checkHashLink, dfIn)
 end
 
-function clusterLk(mtxIn::Matrix, numCentros::Integer, vecNamesLinks::Vector{String})
-    clusterR = kmeans(mtxIn, numCentros; maxiter = 100, display = :final)
-    enlacesDf = DataFrame(enlace = vecNamesLinks)
-    embeddingsDf = DataFrame(mtxIn', :auto)
-    df_out = hcat(enlacesDf, DataFrame(grupo = clusterR.assignments), embeddingsDf)
-    return clusterR.centers, df_out
+function kMedoidsFromEmbeddings(dfEmbeddingsLinks::DataFrame, numMedoids::Integer)::KmedoidsResult
+    dfEmbeddingsLinks[:, Not(:word)] |> Matrix |>
+    # Transpongo: cada columna es ahora un vector con los elementos del embedding.
+    mtIn -> collect(mtIn') |> mtIn -> pairwise(CosineDist(), mtIn, dims = 2) |>
+                                      distIn -> kmedoids(distIn, numMedoids; maxiter = 100, display = :final)
+end
+# It returns a vector with hash_link of medoids and df with (hash_link, grupo) of the Kmedoids clusters.
+function dfFromKmedoids(embeddingsFile::String, numMedoids::Integer, credentials::Dict{String,String})
+    embeddings = embeddingsForLinks(embeddingsFile)
+    result = kMedoidsFromEmbeddings(embeddings, numMedoids)
+    wordMedoids = [embeddings[i, :word] for i in result.medoids]
+    dfIn1 = DataFrame(hash_link = embeddings[:, :word], grupo = result.assignments)
+    dfIn2 = sqlDbToDf(distinct_links, credentials)
+    dfOut = leftjoin(dfIn1, dfIn2, on = :hash_link)
+    return wordMedoids, dfOut
 end
 
+# Table of number of links per cluster(grupo)
 function linksByCluster(clustersDf::DataFrame)::DataFrame
     groupby(clustersDf, :grupo) |> df -> combine(df, nrow => :num_enlaces)
 end
 
-function greatest_bycosine(grupoNum::Integer, cluDf::DataFrame, centers::Matrix{Float64}, numInList::Integer)::Vector{String}
-    # no normalizo la matriz de embeddings porque ya está normalizada.
-    centerNorm = centers[:, grupoNum] / norm(centers[:, grupoNum])
-    cluOut = filter(:grupo => .==(grupoNum), cluDf) |> df1 -> select(df1, Not([:grupo]))
-    cosines = Matrix(cluOut[:, Not(:enlace)]) * centerNorm
-    dfOut = hcat(cluOut, DataFrame(cosine = cosines)) |>
-            df2 -> sort!(df2, :cosine, rev = true)[1:min(size(df2)[1], numInList), :enlace] |>
-                   vec -> map(v -> SubString(v, 1:min(length(v), 70)), vec)     #select!(df2, :enlace => ByRow(lk -> SubString(lk, 1:min(length(lk), 70)))) 
+# It returns the 20 most frequent words for the string parameter.
+function lexicoCluster(rowDfGrupos::String)::Vector{String}
+    lexico = dictFromArrWords(rowDfGrupos)
+    DataFrame(vocablo = collect(keys(lexico)), frecuencia = collect(values(lexico))) |>
+        # dfIn -> filter!(:vocablo => v -> length(v) > 0, dfIn) |> 
+            dfIn -> sort!(dfIn, :frecuencia, rev = true)[1:min(size(dfIn, 1), 20), :vocablo]
 end
 
 medioin(x::Int64) = (x ÷ 2) + min(1, (x % 2))
+
+# It returns a df with (grupo, grupofreqwordsVec): grupo and a vector with the most frequent words in the grupo.
+function mostFrequentWords(dfHashLinkGrupo::DataFrame, credentials::Dict{String,String}, udpModelIn::RObject)::DataFrame
+    mostFrequentWords(dfHashLinkGrupo, mysqlConn(credentials), udpModelIn)
+end
+
+function mostFrequentWords(dfHashLinkGrupo::DataFrame, conn::MySQL.Connection, udpModelIn::RObject)::DataFrame
+    posArray = ["ADJ", "NOUN", "NUM", "PROPN", "X"]
+
+    dfTokens = sqlDbToDf(two_previous_turnos_tokens, conn) |>
+        dfIn -> select!(dfIn, Not(:tokens), :tokens => ByRow(tk -> checkPrice(join(udpTokens(tk, posArray, udpModelIn), ' '))) => :tokens) |>
+            dfIn -> select!(dfIn, Not(:tokens), :tokens => ByRow(checkFinalLinks) => :tokens) |>
+                dfIn -> filter!(row -> length(row.tokens) > 0, dfIn) |> dropmissing!
+    
+    leftjoin(dfHashLinkGrupo, dfTokens, on = :hash_link) |>
+    dfIn -> groupby(dfIn, :grupo) |>
+            dfIn -> combine(dfIn, :tokens => (tk -> join(tk, ' ')) => :grupotokens) |>
+                    dfIn -> select!(dfIn, :grupo, :grupotokens => ByRow(lexicoCluster) => :grupofreqwordsVec)
+end
+
+# Parámetro con los hash_link de los medoids. It returns df (link, alltokens) for the medoids.
+function turnosTokensMedoids(medoids::Vector{String}, credentials)
+    sqlDbToDf(two_previous_turnos_medoids(medoids), credentials) |> 
+        dfIn -> groupby(dfIn, :link) |> 
+            dfIn -> combine(dfIn, :tokens => (tk -> join(tk, ' ')) => :alltokens)
+end
 
 struct WindowEmbed
     w::Int64
@@ -65,16 +113,17 @@ function (linktomiddle::WindowEmbed)(tokens::String, link::String)
     end
 end
 
-function writeFileInW2vec(convsDf::DataFrame, w2vecFile::String)
+function writeFileInW2vec(credentials::Dict{String,String}, udpModel::RObject, w2vecFile::String)
+    convDf = convsDf(credentials, udpModel)
     fileStream = open(w2vecFile, "w")
-    for conv in eachrow(convsDf)
+    for conv in eachrow(convDf)
         println(fileStream, conv.tokens_links)
     end
     close(fileStream)
 end
 
-# cbow = 1: use skip-gram model. Minimum counts is 2.
+# cbow = 1: use skip-gram model. Minimum counts is 0.
 function writeFileOutW2vec(embedVectorSize::Int64, windowIn::Int64, fileIn::String, fileOut::String)
     word2vec(fileIn, fileOut; size = embedVectorSize, window = windowIn,
-        sample = 1e-2, negative = 5, min_count = 2, alpha = 0.025, cbow = 1, verbose = true)
+        sample = 1e-2, negative = 5, min_count = 0, alpha = 0.025, cbow = 1, verbose = true)
 end

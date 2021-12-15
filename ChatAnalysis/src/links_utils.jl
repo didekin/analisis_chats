@@ -8,14 +8,15 @@ function convByCluster(clustersDf::DataFrame)::DataFrame
     groupby(clustersDf, :cluste) |> df -> combine(df, nrow => :num_conversaciones) |> df2 -> select!(df2, :cluster => :grupo, :num_conversaciones)
 end
 
-function convsFromTurnos(sqlQuery::String, rol::String, conn::MySQL.Connection)::DataFrame
+function convsFromTurnos(sqlQuery::String, rol::String, conn::MySQL.Connection, udpModel::RObject)::DataFrame
     posArray = ["NOUN", "PROPN", "SYM", "X"]
-    queryDbtoDf(sqlQuery, conn) |>
-    df -> filter!(:rol => ==(rol), df) |> df1 -> select!(df1, Not([:id, :rol])) |>
-                                                 df2 -> groupby(df2, [:id_conv]) |>
-                                                        df3 -> combine(df3, :tokens => (tk -> join(tk, ' ')) => :tokens) |>
-                                                               df4 -> select!(df4, Not([:tokens]), :tokens => ByRow(tk -> udpTokens(tk, posArray)) => :tokensArr) |>
-                                                                      df5 -> filter!(:tokensArr => tk -> length(tk) > 0, df5)
+    sqlDbToDf(sqlQuery, conn) |>
+    df -> filter!(:rol => ==(rol), df) |> 
+        df1 -> select!(df1, Not([:id, :rol])) |>
+            df2 -> groupby(df2, [:id_conv]) |>
+                df3 -> combine(df3, :tokens => (tk -> join(tk, ' ')) => :tokens) |>
+                        df4 -> select!(df4, Not([:tokens]), :tokens => ByRow(tk -> udpTokens(tk, posArray, udpModel)) => :tokensArr) |>
+                                df5 -> filter!(:tokensArr => tk -> length(tk) > 0, df5)
 end
 
 #  Corpus. Fields: documents::Vector{T}, total_terms::Int, lexicon::Dict{String, Int}, inverse_index::Dict{String, Vector{Int}}, h::TextHashFunction
@@ -28,20 +29,19 @@ function corpustokens(turnosDf::DataFrame)::Corpus
     return corpus
 end
 
-function distancesKmedoids(queryIn::String, conn::MySQL.Connection)
+function distancesKmedoids(queryIn::String, conn::MySQL.Connection, udpModel::RObject)
     # Seleccionamos los turnos de cliente en las conversaciones.
-    conv_tokens_df = convsFromTurnos(queryIn, cliente, conn) |> df1 -> hcat(df1, DataFrame(numRow = rowNumber(size(df1, 1))))
+    conv_tokens_df = convsFromTurnos(queryIn, cliente, conn, udpModel) |> df1 -> hcat(df1, DataFrame(numRow = rowNumber(size(df1, 1))))
     corpus = corpustokens(conv_tokens_df)
     U, S, V = rm_sparse_freq_terms(corpus) |> # Terms to be included in the dtm matrix.
-              terms -> DocumentTermMatrix(corpus, terms) |> # Dense.
-                       dtm -> tf_idf(dtm) |>  # Sparse. Each row is a turno, each column is a word.
+                    terms -> DocumentTermMatrix(corpus, terms) |> # Dense.
+                        dtm -> tf_idf(dtm) |>  # Sparse. Each row is a turno, each column is a word.
                               tf_idf -> collect(transpose(tf_idf)) |> # Dense. Each row is a word, each column is a turno.
-                                        tf_idf_T -> svd(tf_idf_T) # SVD analysis; thin or reduced version.
+                                    tf_idf_T -> svd(tf_idf_T) # SVD analysis; thin or reduced version.
 
     # Distances.
     dist_SVt30 = Diagonal(S[1:30]) * V'[1:30, :] |>
                  SVt30 -> pairwise(CosineDist(), SVt30, dims = 2)
-
     return conv_tokens_df, dist_SVt30
 end
 
@@ -79,10 +79,11 @@ function printTurnosInConv(clusterTurnos::DataFrame)
     end
 end
 
-function printMedoid(numMedoid::Integer, cluResult, tokensDf::DataFrame, conn::MySQL.Connection)
-    tokensDf[cluResult.medoids[numMedoid], :id_conv] |> num -> convert(Int64, num) |>
-                                                               idConv -> prepareStmtQuery(turno_tokens_inlist([idConv]), conn) |>
-                                                                         medoidDf -> printTurnosInConv(medoidDf)
+function printMedoid(numMedoid::Integer, cluResult, tokensDf::DataFrame, credentials::Dict{String,String})
+    tokensDf[cluResult.medoids[numMedoid], :id_conv] |> 
+        num -> convert(Int64, num) |> 
+            idConv -> sqlDbToDf(turno_tokens_byconvlist([idConv]), credentials) |>
+                 medoidDf -> printTurnosInConv(medoidDf)
 end
 
 # Without sparse and frequent terms.

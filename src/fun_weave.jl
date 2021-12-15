@@ -31,13 +31,13 @@ function out_html_path(htmlName::String, reports_dir::String)
         return joinpath(reports_dir, htmlName)
 end
 
-function chatweave(jmdDoc::String, htmlOut::String; jmdsrcdir, reports_dir, imgReportDir, report_src)
+function chatweave(jmdDoc::String, htmlOut::String; jmdsrcdir=jmddir, reports_dir=reportsdir, imgReportDir=imgDir)
         weave(
                 src_jmd_path(jmdDoc, jmdsrcdir);
                 informat = "markdown",
                 doctype = chat_report_format,
                 out_path = out_html_path(htmlOut, reports_dir),
                 fig_path = imgReportDir,
-                template = joinpath(report_src, chat_template)
+                template = joinpath(jmdsrcdir, chat_template)
         )
 end

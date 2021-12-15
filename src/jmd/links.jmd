@@ -30,49 +30,151 @@ también.
 He optado, pues, por hacer un análisis de todos los enlaces en conjunto para contar con más repeticiones. El método ha sido el siguiente:
 
   1. Extraigo todos los turnos de conversaciones con enlaces a producto, de agente o de cliente.
-  2. Con los turnos compongo un único documento.
-  3. Para aplicar word2vec, defino los dos siguientes hiperparámetros: 10, como el número de términos que componen el contexto de una palabra (5 a la izquierda, 5 a la derecha), y 100 como el número de elementos que componen cada vector que representará una palabra.
-  4. Aplico el algoritmo word2vec al texto con todas las conversaciones y cuantifico todas las palabras en vectores de cien componentes.
-  5. Únicamente con los vectores obtenidos correspondientes a enlaces, aplico el algoritmo *K-means* para obtener cuatro grupos de enlaces.
-  6. Selecciono, en cada grupo, los ocho enlaces más cercanos al centro del grupo: aquellos que mejor lo representan.
 
-Las tablas siguientes muestran los enlaces obtenidos como resultado del proceso.
+  2. Con los turnos compongo un único documento.
+
+  3. Para aplicar word2vec, defino los dos siguientes hiperparámetros: 10, como el número de términos que componen el contexto de una palabra (6 a la izquierda, 6 a la derecha), y 100 como el número de elementos que componen cada vector que representará una palabra.
+
+  4. Aplico el algoritmo word2vec al texto con todas las conversaciones y cuantifico todas las palabras en vectores de cien componentes.
+
+  5. Únicamente con los vectores obtenidos correspondientes a enlaces, aplico el algoritmo *K-medoids* para obtener diez grupos de enlaces.
+
+  6. Para cada grupo de enlaces:
+       + Extraigo el turno del enlace-medoide (el enlace en el centro del grupo) y los dos turnos anteriores. Este sería el argumentario implícito del representante de los enlaces en un grupo.
+
+       + Extraigo, para cada enlace en un mismo grupo, el turno donde aparece y los dos turnos anteriores. Con todos los turnos extraídos compongo un único documento; de él extraigo los 20 vocablos más frecuentes en las categorías de sustantivos y adjetivos, principalmente.
+
+       + Los veinte vocablos del apartado anterior junto con los turnos del medoide del grupo constituirían una primera aproximación al argumentario implícito de todos los enlaces en un grupo.
+
 
 #### 5.1 Distribución de los enlaces por grupos.
 
 ```julia, results = "hidden"
-   include("../jl/links.jl")
-   using PrettyTables
+   include("../script_links.jl")
+   using PrettyTables, Printf
 ```
 
 ```julia
    pretty_table(links_by_grupo, names(links_by_grupo))
 ```
 
-#### 5.1 Enlaces en grupo 1.
+#### 5.2 Enlaces en grupo 1.
 
-```julia, line_width = 130
-   df1 = DataFrame(enlaces=greatest_bycosine(1,clusLk,centersLk,8))
-   pretty_table(df1, names(df1);  alignment=:l)
-```
+**Medoide:** 
 
-#### 5.2 Enlaces en grupo 2.
+`j tokens_medoids[1,:link]`
 
-```julia, line_width = 130
-   df2 = DataFrame(enlaces=greatest_bycosine(2,clusLk,centersLk,8))
-   pretty_table(df2, names(df2);  alignment=:l)
-```
+`j tokens_medoids[1,:alltokens]`
 
-#### 5.3 Enlaces en grupo 3.
+**Palabras más frecuentes**
 
-```julia, line_width = 130
-   df3 = DataFrame(enlaces=greatest_bycosine(3,clusLk,centersLk,8))
-   pretty_table(df3, names(df3);  alignment=:l)
-```
+`j for word in grupo_freqwords[1,:grupofreqwordsVec] @printf " %s  " word end`
 
-#### 5.4 Enlaces en grupo 4.
+#### 5.3 Enlaces en grupo 2.
 
-```julia, line_width = 130
-   df4 = DataFrame(enlaces=greatest_bycosine(4,clusLk,centersLk,8))
-   pretty_table(df4, names(df4);  alignment=:l)
-```
+**Medoide:** 
+
+`j tokens_medoids[2,:link]`
+
+`j tokens_medoids[2,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[2,:grupofreqwordsVec] @printf " %s  " word end`
+
+#### 5.4 Enlaces en grupo 3.
+
+**Medoide:** 
+
+`j tokens_medoids[3,:link]`
+
+`j tokens_medoids[3,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[3,:grupofreqwordsVec] @printf " %s  " word end`
+
+#### 5.5 Enlaces en grupo 4.
+
+**Medoide:** 
+
+`j tokens_medoids[4,:link]`
+
+`j tokens_medoids[4,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[4,:grupofreqwordsVec] @printf " %s  " word end`
+
+#### 5.6 Enlaces en grupo 5.
+
+**Medoide:** 
+
+`j tokens_medoids[5,:link]`
+
+`j tokens_medoids[5,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[5,:grupofreqwordsVec] @printf " %s  " word end`
+
+#### 5.7 Enlaces en grupo 6.
+
+**Medoide:** 
+
+`j tokens_medoids[6,:link]`
+
+`j tokens_medoids[6,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[6,:grupofreqwordsVec] @printf " %s  " word end`
+
+#### 5.8 Enlaces en grupo 7.
+
+**Medoide:** 
+
+`j tokens_medoids[7,:link]`
+
+`j tokens_medoids[7,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[7,:grupofreqwordsVec] @printf " %s  " word end`
+
+#### 5.9 Enlaces en grupo 8.
+
+**Medoide:** 
+
+`j tokens_medoids[8,:link]`
+
+`j tokens_medoids[8,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[8,:grupofreqwordsVec] @printf " %s  " word end`
+
+#### 5.10 Enlaces en grupo 9.
+
+**Medoide:** 
+
+`j tokens_medoids[9,:link]`
+
+`j tokens_medoids[9,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[9,:grupofreqwordsVec] @printf " %s  " word end`
+
+#### 5.11 Enlaces en grupo 10.
+
+**Medoide:** 
+
+`j tokens_medoids[10,:link]`
+
+`j tokens_medoids[10,:alltokens]`
+
+**Palabras más frecuentes**
+
+`j for word in grupo_freqwords[10,:grupofreqwordsVec] @printf " %s  " word end`
+

@@ -70,12 +70,12 @@ function aggregateByRol(groupLines::SubDataFrame)
     return back_df
 end
 
-function dataLowerCase(vectorData::Vector{String})::Vector{String}
-    return lowercase.(strip.(vectorData))
+function dataNormalized(vectorData::Vector{String})::Vector{String}
+    return lowercase.(strip.(Unicode.normalize.(vectorData, stripmark=true)))
 end
 
 # TODO: hay que pasar los tokens por una aplicación de corrección.
-# TODO: expresión regular para numero + euros => numero-euros.
+# TODO: expresión regular para numero + euros => numero-euros. Está puesta sólo para enlaces.
 
 function turnos_df(fileIn::String)::DataFrame
     CSV.File(
@@ -116,8 +116,8 @@ function turnos_df(fileIn::String)::DataFrame
                                                 df -> select!(df, Cols(:id, :rol, :data), :turno => cumsum => :turno)
 end
 
-function tokensDf(turnosDf::DataFrame)
-    return select(turnosDf, Not(:data), :data => ByRow(udpTokens)  => :data) |>
-            df -> select(df, Not(:data), :data => ByRow(dataLowerCase) => :data) |>
+function tokensDf(turnosDf::DataFrame, udpModel::RObject)
+    return select(turnosDf, Not(:data), :data => ByRow(tk -> udpTokens(tk, udpModel))  => :data) |>
+            df -> select(df, Not(:data), :data => ByRow(dataNormalized) => :data) |>
                 df -> filter!(row -> length(row.data) > 0, df)
 end

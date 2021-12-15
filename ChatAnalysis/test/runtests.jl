@@ -1,6 +1,8 @@
 tests = ["db_utils_.jl",
          "insert_turnos_.jl",
-         "token_turnos_df_.jl"
+         "links_.jl",
+         "token_turnos_df_.jl",
+         "utils_.jl"
         ]
 
 println("Runing tests:")

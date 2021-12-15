@@ -1,9 +1,6 @@
 using Test, DataFrames, DBInterface
 import ChatAnalysis as CH
 
-const delete_enlace = "DELETE FROM enlace";
-const delete_turno = "DELETE FROM turno";
-
 @testset verbose = true "turnoWithLinks" begin
     testMatch1 = match(CH.prod_link_regexp, "https://www.google.com/search?q=Asus+ZenBook+14+BX425EA-BM144R&oq=Asus+ZenBook+14+BX425EA-BM144R&aqs=chrome..69i57j69i59j69i60l3&sourceid=chrome&ie=UTF-8")
     testMatch2 = match(CH.prod_link_regexp, "https://www.pccomponentes.com/configurador/")
@@ -27,27 +24,27 @@ const delete_turno = "DELETE FROM turno";
 end # testset
 
 # It requires a data/.envtest file with properties DB_USER=, DB_PASSWD=, DB_NAME= and DB_HOST= with the credentials for the database.
-@testset verbose=true "insertTurno" begin
+@testset verbose=true "createDbTurnos" begin
     df1 = DataFrame(id=[11],rol=[CH.cliente],turno=[2],data=[["hola", "https://www.pccomponentes.com/produ-1", "adios"]])
     credentials = CH.dbCredentials("data/.envtest")
-    conn = CH.mysqlConn(credentials)
+    conn1 = CH.mysqlConn(credentials)
 
-    stmt1 = DBInterface.prepare(conn, CH.insert_enlace)   
+    stmt1 = DBInterface.prepare(conn1, CH.insert_enlace)   
     dfRowOut1 = DataFrame(id_conv=[11],rol=[CH.cliente],turno_rol=[2], link="produ-1", hash_link=CH.linkHashed*string(hash("produ-1")))[1,:]  
     CH.insertEnlace(stmt1,df1[1,:])    
-    @test CH.queryDbtoDf(CH.all_enlace, credentials)[1,:] == dfRowOut1
-    CH.queryDbtoDf(delete_enlace,credentials)
+    @test CH.sqlDbToDf(CH.all_enlace, credentials)[1,:] == dfRowOut1
+    CH.sqlDbToDf(CH.delete_enlace,credentials)
 
-    stmt2 = DBInterface.prepare(conn, CH.insert_turno) 
+    stmt2 = DBInterface.prepare(conn1, CH.insert_turno) 
     dfRowOut2 = DataFrame(id_conv=[11],rol=[CH.cliente],turno_rol=[2], tokens="hola adios", tokens_links="hola "*CH.linkHashed*string(hash("produ-1"))*" adios")[1,:]  
     CH.insertTurno(stmt2, stmt1, df1[1,:])
-    @test CH.queryDbtoDf(CH.all_enlace, credentials)[1,:] == dfRowOut1 && CH.queryDbtoDf(CH.all_turno, conn)[1,:] == dfRowOut2
-    
-    DBInterface.close!(stmt1)
-    DBInterface.close!(stmt2)
-    DBInterface.close!(conn)
-    CH.queryDbtoDf(delete_enlace, credentials)
-    CH.queryDbtoDf(delete_turno, credentials)
-end
+    @test CH.sqlDbToDf(CH.all_enlace, conn1)[1,:] == dfRowOut1 && CH.sqlDbToDf(CH.all_turno, conn1)[1,:] == dfRowOut2
 
-# test_db = turnos_df(joinpath("data/", "test.csv")) |> tokensDf |> createDbTurnos
+    CH.cleanConnStmtDb(conn1, [stmt1,stmt2], credentials)
+
+    CH.createDbTurnos(df1, CH.dbCredentials("data/.envtest"))    
+    conn2 = CH.mysqlConn(credentials)
+    @test CH.sqlDbToDf(CH.all_enlace, conn2)[1,:] == dfRowOut1 && CH.sqlDbToDf(CH.all_turno, conn2)[1,:] == dfRowOut2
+
+    CH.cleanConnStmtDb(conn2, [], credentials)
+end

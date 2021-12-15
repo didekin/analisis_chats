@@ -1,4 +1,6 @@
-using ChatAnalysis
+include("script_commons.jl")
 
 # Carga en base de datos del fichero de conversaciones.
-turnosDB = turnos_df(joinpath(data_dir, "test.csv")) #|> tokensDf |> createDbTurnos
+turnosDB = CH.turnos_df(joinpath(data_dir, "conv.csv")) |> 
+        dfIn -> CH.tokensDf(dfIn, udpModelConst) |> 
+            dfIn -> CH.createDbTurnos(dfIn, credentials)

@@ -10,9 +10,6 @@ const init_link_regexp = r"^http[s]?:\/{1,2}";
 const linkHashed = "lkHs_";
 # To identify links with "configurador"
 const configurador_link = "configurador_enlace";
-# For insertions in BD
-const insert_turno = "INSERT INTO turno (id_conv, rol, turno_rol, tokens, tokens_links) VALUES (?, ?, ?, ?, ?)";
-const insert_enlace = "INSERT INTO enlace (id_conv, rol, turno_rol, link, hash_link) VALUES (?, ?, ?, ?, ?)";
 
 # Este código es altamente dependiente del formato de URLs de el chatbot de Rhy.
     function checkPathUrl(regexMatch::RegexMatch)::String
@@ -77,9 +74,7 @@ function createDbTurnos(dfTurnos::DataFrame, credentials::Dict{String,String})
     for turnoRow in rows
         insertTurno(stmtTurno, stmtRecom, turnoRow)
     end
-    DBInterface.close!(stmtRecom)
-    DBInterface.close!(stmtTurno)
-    DBInterface.close!(conn)
+    cleanConnStmt(conn, [stmtRecom, stmtTurno])
 end
 
 # TODO: pendiente este tipo https://www.adaptadores-pc.com/index.php?main_page=product_info&cPath=31_4&products_id=347729&gclid=Cj0KCQiAst2BBhDJARIsAGo2ldX6OAIGHBst_ZzPZiptr3Gvbe7WRhnTdTNaO-BA5womJxmLZeUQqZEaAgJxEALw_wcB

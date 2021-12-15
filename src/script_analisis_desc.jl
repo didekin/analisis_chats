@@ -24,7 +24,7 @@ end
 
 # ===================================== 2.  Análisis preliminar ==================================== 
 
-turno_link_issop = queryDbtoDf(turno_enlace) |>  #TODO: falta parámetro conn.
+turno_link_issop = sqlDbToDf(turno_enlace) |>  #TODO: falta parámetro conn.
                    df -> select!(df, Not([:tokens, :tokens_links]), :tokens_links => ByRow(isSoporteTk) => :issoporte)
 
 # Número de turnos, enlaces y issopporte, por conversación. 

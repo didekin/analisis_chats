@@ -1,15 +1,11 @@
-import ChatAnalysis as CH
+include("script_commons.jl")
+include("fun_weave.jl")
 
-const reportsrc = joinpath(prod_src_dir, "report_code");
-const jmddir = joinpath(report_src, "jmd")
+const jmddir = joinpath(src_dir, "jmd")
 const reportsdir = joinpath(chat_dir, "reports");
 const imgDir = joinpath(reportsdir, "img");
 
 # =========================== Weave reports ============================= 
-
-function chatweave(jmdDoc::String, htmlOut::String)
-    CH.chatweave(jmdDoc, htmlOut; jmdsrcdir=jmddir, reports_dir=reportsdir, imgReportDir=imgDir, report_src=reportsrc)
-end
 
 chatweave(intro_jmd, intro_html)
 chatweave(analisis_descrip_jmd, analisis_descrip_html)
