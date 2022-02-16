@@ -64,6 +64,7 @@ function turno_tokens_byconvlist(list)
   "SELECT id_conv, tokens FROM turno WHERE id_conv IN (" * join(list, ',') * ") AND rol='cl' ORDER BY id;"
 end
 
+# TODO: hay que filtrar WHERE link != 'soporte_enlace' en los análisis de links.jl
 const two_previous_turnos_tokens = "SELECT j.hash_link, tu.tokens
                                     FROM turno tu INNER JOIN (
                                       SELECT t.id, e.id_conv, e.hash_link FROM enlace e 

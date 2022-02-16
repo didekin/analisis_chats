@@ -6,8 +6,8 @@ function checkHashLink(hashText::String)
     occursin(r"^(?:lkHs_)\d+$", hashText)
 end
 
-function checkFinalLinks(link::String)
-    replace(link, r"modelo[s]?|enlace[s]?|link[s]?" => s"")
+function checkFinalTokens(tokens::String)
+    replace(tokens, r"modelo[s]?|enlace[s]?|link[s]?" => s"")
 end
 
 function convsDf(credentials::Dict{String,String}, udpModel::RObject; sqlQuery::String = all_turno_tokenslinks)::DataFrame
@@ -74,7 +74,7 @@ function mostFrequentWords(dfHashLinkGrupo::DataFrame, conn::MySQL.Connection, u
 
     dfTokens = sqlDbToDf(two_previous_turnos_tokens, conn) |>
         dfIn -> select!(dfIn, Not(:tokens), :tokens => ByRow(tk -> checkPrice(join(udpTokens(tk, posArray, udpModelIn), ' '))) => :tokens) |>
-            dfIn -> select!(dfIn, Not(:tokens), :tokens => ByRow(checkFinalLinks) => :tokens) |>
+            dfIn -> select!(dfIn, Not(:tokens), :tokens => ByRow(checkFinalTokens) => :tokens) |>
                 dfIn -> filter!(row -> length(row.tokens) > 0, dfIn) |> dropmissing!
     
     leftjoin(dfHashLinkGrupo, dfTokens, on = :hash_link) |>

@@ -35,8 +35,8 @@ function distancesKmedoids(queryIn::String, conn::MySQL.Connection, udpModel::RO
     corpus = corpustokens(conv_tokens_df)
     U, S, V = rm_sparse_freq_terms(corpus) |> # Terms to be included in the dtm matrix.
                     terms -> DocumentTermMatrix(corpus, terms) |> # Dense.
-                        dtm -> tf_idf(dtm) |>  # Sparse. Each row is a turno, each column is a word.
-                              tf_idf -> collect(transpose(tf_idf)) |> # Dense. Each row is a word, each column is a turno.
+                        dtm -> tf_idf(dtm) |>  # Sparse. Each row is a conversation, each column is a word.
+                              tf_idf -> collect(transpose(tf_idf)) |> # Dense. Each row is a word, each column is a conversation.
                                     tf_idf_T -> svd(tf_idf_T) # SVD analysis; thin or reduced version.
 
     # Distances.
@@ -87,7 +87,7 @@ function printMedoid(numMedoid::Integer, cluResult, tokensDf::DataFrame, credent
 end
 
 # Without sparse and frequent terms.
-function rm_sparse_freq_terms(corpusIn::Corpus, sparse = 0.01, frequent = 0.99)::Dict{String,Integer}
+function rm_sparse_freq_terms(corpusIn::Corpus; sparse = 0.01, frequent = 0.99)::Dict{String,Integer}
     lexout = lexicon(corpusIn)
     sp = sparse_terms(corpusIn, sparse)
     ft = frequent_terms(corpusIn, frequent)

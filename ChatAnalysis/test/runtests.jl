@@ -1,6 +1,7 @@
 tests = ["db_utils_.jl",
          "insert_turnos_.jl",
          "links_.jl",
+         "questions__.jl",
          "token_turnos_df_.jl",
          "utils_.jl"
         ]

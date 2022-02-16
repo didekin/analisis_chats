@@ -62,7 +62,7 @@ end
     udpModelIn = CH.udpModel("data/spanish-gsd-ud-2.5-191206.udpipe")
     credentials = CH.dbCredentials("data/.envtest")
 
-    @test  issetequal(CH.checkFinalLinks("modelos link"), " ") && CH.checkFinalLinks("enlace") == "" && CH.checkFinalLinks("prod-1") == "prod-1"
+    @test  issetequal(CH.checkFinalTokens("modelos link"), " ") && CH.checkFinalTokens("enlace") == "" && CH.checkFinalTokens("prod-1") == "prod-1"
 
     rowStr = "hola2 hola2 buenas1"
     @test issetequal(CH.lexicoCluster(rowStr), ["hola2", "buenas1"])
@@ -75,12 +75,7 @@ end
         VALUES (11,'cl',1,'prod_1','hash_prod1'),(12,'ag',1,'prod_2','hash_prod2');",
         credentials
     )
-    # Wait for data in DB.
-    t2 = @async begin
-        sleep(1)
-    end
-    wait(t2)
-
+    CH.waitForDb(1)
     conn = CH.mysqlConn(credentials)
     # Two links in the same group: grupo 1.
     dfHashLinkGrupo = DataFrame(hash_link = ["hash_prod1", "hash_prod2"], grupo = [1, 1])
